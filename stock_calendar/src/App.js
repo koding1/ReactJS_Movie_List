@@ -54,36 +54,63 @@
 
 // export default App;
 
+
 import React from "react";
 import PropTypes from "prop-types"; // prop의 types 이 사전에 설정한 타입이 맞는지 검사
-
+import axios from "axios"; // data fetch
+import Movie from "./Movie";
+import "./App.css"
 
 class App extends React.Component{
 
 	
 	state = {
-		cnt : 0
+		isLoading : true,
+		movies: []
 	}
-	
-	// setState를 호출 할 때 render function이 호출 되므로 render function이 값이 수정 되었을 때 자동 호출되게 ㅏ기 위해서는 state 를 직접 이용해서 건드리는 방식을 최대한 피해야한다.
-	add = () => {
-		this.setState(current => ({cnt : current.cnt + 1}));
-	};
-	minus = () => {
-		this.setState(current => ({cnt : current.cnt - 1}));
-	};
 
-	componentDidUpdate() {
-		console.log("ag");
+	getMovies = async () => {
+		const {data: {data : {movies}}} = await axios.get("https://yts-proxy.now.sh/list_movies.json?sort_by=rating");
+		console.log(movies);
+		// == this.setState({movies : movies, isLoading: false}) 여기서 왼쪽 movies는 state, 오른쪽 movies는 axios로 부터 왔으며 js가 똑똑해서 그냥 아래처럼 써도 이해하는 것이다.
+		this.setState({movies, isLoading:false})
 	}
 	
-	render(){
-		return <div>
-			<h1>{this.state.cnt}</h1>
-			<button onClick = {this.add}>add</button>
-			<button onClick = {this.minus}>minus</button>
-		</div>
+	componentDidMount() {
+		this.getMovies();
+		
 	}
+	
+	render() {
+		const { isLoading, movies } = this.state;
+		
+		return (
+			<section className="container">
+				{isLoading ? (
+					<div className="loader">
+						<span className="loader_text">Loading...</span>
+					</div> 
+					) : (
+					<div className="movies">
+						{movies.map(movie => (
+							<Movie
+								key={movie.id}
+                				id={movie.id}
+               				 	year={movie.year}
+              					title={movie.title}
+                				summary={movie.summary}
+                				poster={movie.medium_cover_image}
+								genres={movie.genres}
+
+              				/>
+						))}
+					</div>
+					)	
+				}
+			</section>
+		);
+	}
+
 	
 	
 }
